@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="ku" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#4f46e5">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>مامۆستا گوڵاڵە | پەیمانگای کۆمپیوتەری ڕانیە</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- React & ReactDOM -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+  <!-- Babel -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Rudaw:wght@300;400;700;900&family=Vazirmatn:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Vazirmatn', 'ui-sans-serif', 'system-ui'],
+            kurdish: ['Rudaw', 'Vazirmatn', 'sans-serif'],
+          },
+          animation: {
+            'float': 'float 6s ease-in-out infinite',
+            'fade-in': 'fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
+            'slide-up': 'slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
+          },
+          keyframes: {
+            float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } },
+            fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+            slideUp: { '0%': { transform: 'translateY(20px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } }
+          },
+          boxShadow: {
+            'soft': '0 10px 40px -10px rgba(0,0,0,0.08)',
+            'glow': '0 0 20px rgba(79, 70, 229, 0.3)'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body { font-family: 'Vazirmatn', sans-serif; background-color: #f8fafc; -webkit-tap-highlight-color: transparent; }
+    ::-webkit-scrollbar { width: 0px; background: transparent; }
+    .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.5); }
+    .gradient-text { background-clip: text; -webkit-background-clip: text; color: transparent; background-image: linear-gradient(to right, #4f46e5, #9333ea); }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased selection:bg-indigo-100 selection:text-indigo-900">
+  
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // --- High Quality SVG Icons ---
+    const Icons = {
+      BookOpen: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>,
+      PenTool: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 19 7-7 3 3-7 7-3-3z"/><path d="m18 13-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="m2 2 7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>,
+      Menu: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>,
+      Hash: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" x2="20" y1="9" y2="9"/><line x1="4" x2="20" y1="15" y2="15"/><line x1="10" x2="8" y1="3" y2="21"/><line x1="16" x2="14" y1="3" y2="21"/></svg>,
+      Feather: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" x2="2" y1="8" y2="22"/><line x1="17.5" x2="9" y1="15" y2="15"/></svg>,
+      ChevronDown: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>,
+      HelpCircle: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>,
+      CheckCircle2: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>,
+      XCircle: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>,
+      Trophy: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>,
+      Star: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
+      RefreshCw: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>,
+      ArrowLeft: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>,
+      Sparkles: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>,
+      GraduationCap: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>,
+      Home: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+      BookMarked: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/><polyline points="10 2 10 10 13 7 16 10 16 2"/></svg>,
+      Quote: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1Z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1Z"/></svg>,
+      Zap: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
+      Lightbulb: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-1 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>
+    };
+
+    // --- DATA ---
+    const lessons = [
+      {
+        id: 'punctuation',
+        title: 'خاڵبەندی و نیشانەکان',
+        subtitle: 'هونەری ڕێکخستنی نووسین و خوێندنەوە',
+        iconName: 'PenTool',
+        color: "from-blue-500 to-cyan-400",
+        content: (
+          <div className="space-y-8 text-slate-700 leading-9">
+            
+            <div className="bg-blue-50 p-6 rounded-2xl border-r-4 border-blue-500">
+              <h4 className="font-bold text-blue-900 text-lg mb-2">خاڵبەندی چییە؟</h4>
+              <p className="text-slate-700">
+                خاڵبەندی بریتییە لە دانانی هێما و نیشانە لە نێوان وشە و ڕستەکاندا. ئەمە تەنیا بۆ جوانکاری نییە، بەڵکو بۆ ئەوەیە خوێنەر لە کاتی خوێندنەوەدا <span className="font-bold text-blue-600">هەست بە مانای تەواو، سۆز، و ڕاوەستان</span> بکات.
+              </p>
+            </div>
+
+            <div className="space-y-6">
+              {/* Section 1: Full Stop */}
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-blue-500"></div>
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center text-4xl font-bold pb-2">.</span>
+                  <div>
+                    <h3 className="text-xl font-black text-slate-800">خاڵ (Full Stop)</h3>
+                    <p className="text-sm text-slate-500">نیشانەی ڕاوەستانی تەواو</p>
+                  </div>
+                </div>
+                <p className="mb-3">لە دوو شوێنی سەرەکیدا بەکاردێت:</p>
+                <ul className="space-y-3">
+                  <li className="flex items-start gap-2 bg-slate-50 p-3 rounded-lg">
+                    <div className="text-green-500 mt-1">{Icons.CheckCircle2}</div>
+                    <span><strong>کۆتایی ڕستە:</strong> کاتێک ڕستەکە تەواو دەبێت و مانای دەبەخشێت.<br/><span className="text-sm text-slate-500">نموونە: دوێنێ نامەکەم نووسی.</span></span>
+                  </li>
+                  <li className="flex items-start gap-2 bg-slate-50 p-3 rounded-lg">
+                    <div className="text-green-500 mt-1">{Icons.CheckCircle2}</div>
+                    <span><strong>کورتکراوە:</strong> لە دوای پیتی یەکەمی ناوێک بۆ کورتکردنەوە.<br/><span className="text-sm text-slate-500">نموونە: م. بازیان (مامۆستا بازیان).</span></span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Section 2: Colon */}
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-indigo-500"></div>
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center text-3xl font-bold pb-1">:</span>
+                  <div>
+                    <h3 className="text-xl font-black text-slate-800">دوو خاڵ (Colon)</h3>
+                    <p className="text-sm text-slate-500">نیشانەی ڕاڤەکردن و قسەکردن</p>
+                  </div>
+                </div>
+                <div className="grid gap-3">
+                  <div className="bg-indigo-50 p-3 rounded-lg border border-indigo-100">
+                    <span className="font-bold text-indigo-800 block mb-1">١. پێش ئاخاوتن:</span>
+                    <p className="text-sm">کاتێک قسەی کەسێک دەگوازینەوە.</p>
+                    <p className="mt-2 bg-white px-3 py-2 rounded text-slate-600 text-sm">هانا گوتی<span className="text-red-500 font-bold">:</span> ئەمە پاسکیلەکەی من نییە.</p>
+                  </div>
+                  <div className="bg-indigo-50 p-3 rounded-lg border border-indigo-100">
+                    <span className="font-bold text-indigo-800 block mb-1">٢. بۆ ڕوونکردنەوە و نموونە:</span>
+                    <p className="mt-2 bg-white px-3 py-2 rounded text-slate-600 text-sm">ساڵ چوار وەرزە<span className="text-red-500 font-bold">:</span> بەهار، هاوین، پایز، زستان.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 3: Comma */}
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-teal-500"></div>
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="w-12 h-12 bg-teal-100 text-teal-600 rounded-xl flex items-center justify-center text-4xl font-bold pb-2">،</span>
+                  <div>
+                    <h3 className="text-xl font-black text-slate-800">بۆر (Comma)</h3>
+                    <p className="text-sm text-slate-500">کورترین ڕاوەستان</p>
+                  </div>
+                </div>
+                <ul className="list-disc list-inside space-y-2 text-slate-700">
+                  <li><strong>دوای ناوی بانگکراو:</strong> کوڕینە، بخوێنن.</li>
+                  <li><strong>نێوان زنجیرە وشە:</strong> ناو، جێناو، کار، ئامراز.</li>
+                  <li><strong>نێوان دوو ڕستەی لێکدراو:</strong> زۆر هات، قەواڵە بەتاڵە.</li>
+                </ul>
+              </div>
+
+              {/* Section 4: Emotions */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="bg-rose-50 p-5 rounded-2xl border border-rose-100">
+                  <span className="text-3xl text-rose-500 font-black block mb-2">!</span>
+                  <h4 className="font-bold text-rose-800 mb-1">سەرسوڕمان</h4>
+                  <p className="text-sm text-slate-600">بۆ دەربڕینی خۆشی، پەژارە، یان سەرسامبوون.</p>
+                  <p className="mt-2 text-xs bg-white p-2 rounded text-center">چەند جوانە!</p>
+                </div>
+                <div className="bg-amber-50 p-5 rounded-2xl border border-amber-100">
+                  <span className="text-3xl text-amber-500 font-black block mb-2">؟</span>
+                  <h4 className="font-bold text-amber-800 mb-1">پرسیار</h4>
+                  <p className="text-sm text-slate-600">لە کۆتایی هەر ڕستەیەک که پرسیاری تێدا بێت.</p>
+                  <p className="mt-2 text-xs bg-white p-2 rounded text-center">کەی دێیتەوە؟</p>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        )
+      },
+      {
+        id: 'vocative',
+        title: 'ئامرازی بانگکردن',
+        subtitle: 'چۆنێتی بانگکردن لە زمانی کوردیدا',
+        iconName: 'Menu',
+        color: "from-purple-500 to-pink-500",
+        content: (
+          <div className="space-y-8 text-slate-700 leading-9">
+            <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+              <p className="text-lg mb-4">
+                ئامرازی بانگکردن ئەو وشە یان پاشگرانەن کە بەکاردێن بۆ <span className="text-purple-600 font-bold">بانگکردن</span> یان <span className="text-purple-600 font-bold">وریاکردنەوەی</span> کەسی بەرامبەر.
+              </p>
+              
+              <div className="grid gap-3">
+                <div className="flex items-center gap-4 bg-purple-50 p-3 rounded-xl border border-purple-100">
+                  <div className="bg-purple-500 text-white w-8 h-8 flex items-center justify-center rounded-full font-bold">١</div>
+                  <div>
+                    <span className="font-bold text-purple-900 block">بۆ هەردوو ڕەگەز (گشتی)</span>
+                    <span className="text-sm text-slate-600">ئەی، هۆ، هەی، ئادەی، ئا</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4 bg-pink-50 p-3 rounded-xl border border-pink-100">
+                  <div className="bg-pink-500 text-white w-8 h-8 flex items-center justify-center rounded-full font-bold">٢</div>
+                  <div>
+                    <span className="font-bold text-pink-900 block">تایبەت بە مێ (کچ)</span>
+                    <span className="text-sm text-slate-600">ێ، هێ (نموونە: کچێ، خوشکێ)</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4 bg-blue-50 p-3 rounded-xl border border-blue-100">
+                  <div className="bg-blue-500 text-white w-8 h-8 flex items-center justify-center rounded-full font-bold">٣</div>
+                  <div>
+                    <span className="font-bold text-blue-900 block">تایبەت بە نێر (کوڕ)</span>
+                    <span className="text-sm text-slate-600">هۆ، ئۆ (نموونە: هۆ کاکە)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-yellow-50 p-6 rounded-3xl border border-yellow-200 relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-4 opacity-10 text-yellow-600">
+                {Icons.Zap}
+              </div>
+              <h4 className="font-bold text-yellow-800 text-xl mb-3 flex items-center gap-2">
+                <div className="w-6 h-6">{Icons.Lightbulb}</div>
+                یاسایەکی زۆر گرنگ!
+              </h4>
+              <p className="mb-4 text-slate-700">
+                ئەگەر ناوێک کۆ (جەمع) بێت و نیشانەی <span className="bg-white px-2 py-0.5 rounded font-bold border">(ان)</span>ی پێوە بێت، کاتێک بە ئامرازی <span className="bg-white px-2 py-0.5 rounded font-bold border">(ە)</span> بانگ دەکرێت، ئەوا پیتی (ان) دەگۆڕێت بۆ <span className="text-red-600 font-bold">(ین)</span>.
+              </p>
+              
+              <div className="flex flex-col gap-2">
+                 <div className="flex items-center justify-between bg-white p-3 rounded-xl shadow-sm">
+                    <span className="text-slate-500">کوڕان + ە</span>
+                    <div className="w-5 h-5 text-slate-300">{Icons.ArrowLeft}</div>
+                    <span className="font-bold text-green-600 text-lg">کوڕینە</span>
+                 </div>
+                 <div className="flex items-center justify-between bg-white p-3 rounded-xl shadow-sm">
+                    <span className="text-slate-500">خوشکان + ە</span>
+                    <div className="w-5 h-5 text-slate-300">{Icons.ArrowLeft}</div>
+                    <span className="font-bold text-green-600 text-lg">خوشکینە</span>
+                 </div>
+              </div>
+            </div>
+
+            <div className="bg-slate-800 text-white p-6 rounded-3xl">
+               <h4 className="font-bold border-b border-slate-600 pb-2 mb-3">شوێنی ئامرازەکان</h4>
+               <div className="grid grid-cols-2 gap-4 text-center">
+                  <div>
+                     <p className="text-slate-400 text-xs mb-1">پێش ناو دەکەون</p>
+                     <span className="font-bold text-lg">ئەی، هۆ، ئادەی</span>
+                     <p className="text-xs mt-1 opacity-70">ئەی شەهیدان</p>
+                  </div>
+                  <div className="border-r border-slate-600">
+                     <p className="text-slate-400 text-xs mb-1">دوای ناو دەکەون</p>
+                     <span className="font-bold text-lg">ە، ێ</span>
+                     <p className="text-xs mt-1 opacity-70">کوڕینە، کچێ</p>
+                  </div>
+               </div>
+            </div>
+
+          </div>
+        )
+      },
+      {
+        id: 'verbs',
+        title: 'کار و جۆرەکانی',
+        subtitle: 'تێپەڕ، تێنەپەڕ و یاریدەدەر',
+        iconName: 'Hash',
+        color: "from-emerald-500 to-green-600",
+        content: (
+          <div className="space-y-8 text-slate-700 leading-9">
+            
+            <p className="text-lg">
+              کار (Verb) ئەو وشەیەیە کە کردارێک یان ڕووداوێک پیشان دەدات لە کاتێکی دیاریکراودا.
+            </p>
+
+            <div className="flex flex-col gap-6">
+                {/* Transitive Verb */}
+                <div className="bg-white rounded-3xl shadow-lg shadow-emerald-100 overflow-hidden border border-emerald-100">
+                    <div className="bg-emerald-600 p-4 text-white flex justify-between items-center">
+                        <h3 className="text-xl font-bold">١. کاری تێپەڕ (Transitive)</h3>
+                        <div className="bg-white/20 p-2 rounded-lg text-white">{Icons.ArrowLeft}</div>
+                    </div>
+                    <div className="p-6">
+                        <p className="mb-4 text-slate-600">ئەو کارەیە کە تەنیا بە بکەر (کەرە) واتاکەی تەواو نابێت، بەڵکو پێویستی بە <span className="text-red-500 font-bold">بەرکار</span> هەیە.</p>
+                        
+                        <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-200 mb-4">
+                            <div className="flex justify-center items-center gap-2 font-bold text-lg">
+                                <span className="text-slate-500">ئازاد</span>
+                                <span className="text-red-500 border-b-2 border-red-500">سێوەکەی</span>
+                                <span className="text-emerald-600">خوارد</span>
+                            </div>
+                            <div className="flex justify-center gap-8 text-xs text-slate-400 mt-2">
+                                <span>بکەر</span>
+                                <span>بەرکار (پێویستە)</span>
+                                <span>کار</span>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-2">
+                            <span className="bg-slate-100 px-3 py-1 rounded-full text-xs font-bold text-slate-600">نیشانە:</span>
+                            <p className="text-sm">جێناوی لکاو (م، مان، ت، تان...) وەردەگرێت.</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Intransitive Verb */}
+                <div className="bg-white rounded-3xl shadow-lg shadow-blue-100 overflow-hidden border border-blue-100">
+                    <div className="bg-blue-600 p-4 text-white flex justify-between items-center">
+                        <h3 className="text-xl font-bold">٢. کاری تێنەپەڕ (Intransitive)</h3>
+                        <div className="bg-white/20 p-2 rounded-lg text-white">{Icons.XCircle}</div>
+                    </div>
+                    <div className="p-6">
+                        <p className="mb-4 text-slate-600">ئەو کارەیە کە تەنیا بە <span className="text-blue-500 font-bold">بکەر</span> واتاکەی تەواو دەبێت و پێویستی بە بەرکار نییە.</p>
+                        
+                        <div className="bg-blue-50 p-4 rounded-xl border border-blue-200 mb-4">
+                            <div className="flex justify-center items-center gap-2 font-bold text-lg">
+                                <span className="text-slate-500">منداڵەکە</span>
+                                <span className="text-blue-600">نووست</span>
+                            </div>
+                            <div className="flex justify-center gap-8 text-xs text-slate-400 mt-2">
+                                <span>بکەر</span>
+                                <span>کار (تەواوە)</span>
+                            </div>
+                        </div>
+                        
+                        <p className="text-sm text-slate-500 bg-slate-50 p-3 rounded-lg">
+                            <strong>نموونەی تر:</strong> هات، چوو، کەوت، دانیشت.
+                        </p>
+                    </div>
+                </div>
+
+                {/* Auxiliary Verb */}
+                <div className="bg-white rounded-3xl shadow-lg shadow-orange-100 overflow-hidden border border-orange-100">
+                    <div className="bg-orange-500 p-4 text-white flex justify-between items-center">
+                        <h3 className="text-xl font-bold">٣. کاری یاریدەدەر (Auxiliary)</h3>
+                        <div className="bg-white/20 p-2 rounded-lg text-white">{Icons.HelpCircle}</div>
+                    </div>
+                    <div className="p-6">
+                        <p className="mb-4 text-slate-600">ئەو کارەیە کە لە ڕستەدا بە تەنیا نایەت، بەڵکو لە پاڵ کارێکی تر یان چاوگێک دێت بۆ تەواوکردنی واتاکەی.</p>
+                        
+                        <div className="grid grid-cols-2 gap-3 mb-4">
+                            {['دەبێت', 'دەشێت', 'دەوێرم', 'ویستم', 'دەتوانی'].map((v) => (
+                                <span key={v} className="bg-orange-50 text-orange-800 text-center py-2 rounded-lg font-bold">{v}</span>
+                            ))}
+                        </div>
+
+                        <div className="bg-slate-50 p-3 rounded-xl border-l-4 border-orange-500">
+                            <p className="text-sm font-medium">
+                                <span className="text-orange-600 font-bold">دەبێت</span> بچین بۆ بازاڕ.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+          </div>
+        )
+      },
+      {
+        id: 'literature',
+        title: 'ئەدەب و مێژوو',
+        subtitle: 'کلاسیک، نالی و مێژووی ئەدەب',
+        iconName: 'Feather',
+        color: "from-amber-500 to-orange-500",
+        content: (
+          <div className="space-y-8 text-slate-700 leading-9">
+            
+            {/* Intro Card */}
+            <div className="relative bg-gradient-to-br from-amber-900 to-amber-700 rounded-3xl p-8 text-white overflow-hidden shadow-2xl">
+                 <div className="absolute top-0 right-0 w-40 h-40 bg-white opacity-5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+                 <div className="absolute bottom-0 left-0 w-32 h-32 bg-black opacity-20 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
+                 <div className="relative z-10 text-center">
+                     <h3 className="text-3xl font-rudaw font-black mb-2">ڕێبازی کلاسیک</h3>
+                     <p className="text-amber-100 text-sm opacity-90 max-w-sm mx-auto leading-relaxed">
+                         کۆنترین ڕێبازی ئەدەبییە، لە سەدەی ١٧ لە ئەوروپا سەریهەڵدا و دواتر گەیشتە ئەدەبی کوردی.
+                     </p>
+                 </div>
+            </div>
+
+            {/* Characteristics */}
+            <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                <h4 className="font-bold text-slate-800 mb-4 flex items-center gap-2 text-lg">
+                    <div className="w-5 h-5 text-amber-500">{Icons.Sparkles}</div>
+                    تایبەتمەندییەکانی کلاسیکی کوردی:
+                </h4>
+                <div className="space-y-4">
+                    <div className="flex gap-4">
+                        <div className="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center shrink-0 font-bold text-amber-600">١</div>
+                        <div>
+                            <h5 className="font-bold text-slate-800">کێشی عەرووزی</h5>
+                            <p className="text-sm text-slate-500">پەیڕەوکردنی کێشی عەرووزی عەرەبی لە شیعردا.</p>
+                        </div>
+                    </div>
+                    <div className="flex gap-4">
+                        <div className="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center shrink-0 font-bold text-amber-600">٢</div>
+                        <div>
+                            <h5 className="font-bold text-slate-800">ڕەوانبێژی و واتا</h5>
+                            <p className="text-sm text-slate-500">گرنگیدان بە پتەوی واتا و بەکارهێنانی وشەی ڕەسەن.</p>
+                        </div>
+                    </div>
+                    <div className="flex gap-4">
+                        <div className="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center shrink-0 font-bold text-amber-600">٣</div>
+                        <div>
+                            <h5 className="font-bold text-slate-800">یەکێتی بابەت</h5>
+                            <p className="text-sm text-slate-500">پاراستنی یەکێتی سەروای شیعر.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Nali Profile */}
+            <div className="bg-slate-50 rounded-3xl p-6 border border-slate-200 relative">
+                 <div className="absolute top-4 left-4 bg-amber-500 text-white text-xs px-3 py-1 rounded-full font-bold shadow-sm">دامەزرێنەر</div>
+                 <h4 className="font-black text-2xl text-slate-800 mb-2">نالی (١٨٠٠ - ١٨٧٣)</h4>
+                 
+                 <div className="space-y-4">
+                     <p className="text-sm leading-relaxed text-slate-600">
+                         ناوی تەواوی <span className="font-bold text-slate-800">مەلا خدر</span>ە، کوڕی ئەحمەدی شاوەیسی ئالی بەگی میکایەڵیە. لە گوندی "خاک و خۆڵ" لەدایکبووە. بە دامەزرێنەری قوتابخانەی شیعری بابان و بەردی بناغەی زمانی ئەدەبی یەکگرتووی کوردی دادەنرێت.
+                     </p>
+                     
+                     <div className="bg-white p-5 rounded-2xl shadow-sm border-r-4 border-amber-500 relative">
+                         <div className="w-8 h-8 text-amber-100 absolute top-2 left-2">{Icons.Quote}</div>
+                         <p className="italic text-slate-700 text-center font-medium relative z-10 leading-loose">
+                             «فارس و کورد و عەرەب هەر سێکم بە دەفتەر گرتووە<br/>
+                             نالی ئەمڕۆ حاکمی سێ موڵکە، دیوانی هەیە»
+                         </p>
+                     </div>
+
+                     <div className="flex flex-wrap gap-2 pt-2">
+                        <span className="bg-slate-200 text-slate-600 text-xs px-3 py-1 rounded-lg">دڵداری</span>
+                        <span className="bg-slate-200 text-slate-600 text-xs px-3 py-1 rounded-lg">ئایینی</span>
+                        <span className="bg-slate-200 text-slate-600 text-xs px-3 py-1 rounded-lg">نیشتمانپەروەری</span>
+                     </div>
+                 </div>
+            </div>
+
+            {/* Other Poets */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                 <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4">
+                     <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center font-bold text-slate-400">٢</div>
+                     <div>
+                         <div className="font-bold text-slate-800">سالم</div>
+                         <div className="text-xs text-slate-500">١٨٠٠ - ١٨٦٦</div>
+                         <div className="text-[10px] text-amber-600 mt-1">ئامۆزای نالی بووە</div>
+                     </div>
+                 </div>
+                 <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4">
+                     <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center font-bold text-slate-400">٣</div>
+                     <div>
+                         <div className="font-bold text-slate-800">مەحوی</div>
+                         <div className="text-xs text-slate-500">١٨٣٠ - ١٩٠٦</div>
+                         <div className="text-[10px] text-amber-600 mt-1">لوتکەی تەسەوف</div>
+                     </div>
+                 </div>
+            </div>
+
+            <div className="bg-indigo-600 text-white p-5 rounded-2xl text-center shadow-lg shadow-indigo-200">
+                <h4 className="font-bold text-lg mb-2">ڕووداوی مێژوویی گرنگ</h4>
+                <p className="text-indigo-100 text-sm">
+                    <strong>داستانی قەڵای دمدم (١٦٠٨):</strong> بە سەرکردایەتی میرخانی لەپ زێڕین، کە بووەتە هۆی دروستبوونی چەندین بەرهەمی ئەدەبی شانازی ئامێز.
+                </p>
+            </div>
+
+          </div>
+        )
+      }
+    ];
+
+    const allQuestions = [
+      { id: 1, question: "کام لەمانە بۆ کۆتایی ڕستەیەک بەکاردێت کە مانای تەواو بێت؟", options: ["، (بۆر)", "؟ (نیشانەی پرسیار)", ". (خاڵ)", "! (سەرسوڕمان)"], correctAnswer: 2, explanation: "خاڵ (.) نیشانەی ڕاوەستانی تەواوە و لە کۆتایی ڕستەی هەواڵیدا دێت." },
+      { id: 2, question: "لە ڕستەی «کوڕینە، بخوێنن»، وشەی «کوڕینە» چییە؟", options: ["بکەر", "ناوی بانگکراو", "ئامرازی بانگکردن", "بەرکار"], correctAnswer: 1, explanation: "«کوڕینە» ناوی بانگکراوە، پاشگری (ینە) ئامرازی بانگکردنەکەیە." },
+      { id: 3, question: "کاری «هات» چ جۆرە کارێکە؟", options: ["کاری تێپەڕ", "کاری تێنەپەڕ", "کاری یاریدەدەر", "هیچیان"], correctAnswer: 1, explanation: "«هات» کاری تێنەپەڕە چونکە پێویستی بە بەرکار نییە." },
+      { id: 4, question: "دامەزرێنەری قوتابخانەی شیعری بابان کێیە؟", options: ["ئەحمەدی خانی", "حاجی قادری کۆیی", "نالی", "پیرەمێرد"], correctAnswer: 2, explanation: "نالی (مەلا خدر) بە دامەزرێنەری قوتابخانەی بابان دادەنرێت." },
+      { id: 5, question: "وشەی (کلاسیزم) لە چییەوە هاتووە؟", options: ["وشەی یۆنانی", "وشەی لاتینی classes", "وشەی فارسی", "وشەی فەرەنسی"], correctAnswer: 1, explanation: "لە وشەی لاتینی classes هاتووە بە واتای کەشتیگەل دێت." },
+      { id: 6, question: "کام لەم ئامرازانە تەنیا بۆ ڕەگەزی مێ بەکاردێت؟", options: ["هۆ", "ئەی", "ێ", "ئۆ"], correctAnswer: 2, explanation: "ئامرازی «ێ» یان «هێ» تایبەتە بە ڕەگەزی مێ، وەک: کچێ، خوشکێ." },
+      { id: 7, question: "لە ڕستەی «منداڵەکە جوانە»، وشەی «جوان» چییە؟", options: ["هاوەڵکاری چۆنیەتی", "هاوەڵناوی چۆنیەتی", "دیارخەری ناو", "تەواوکەری کاری ناتەواو"], correctAnswer: 3, explanation: "لە ڕستەی (منداڵەکە جوانە)، (جوان) تەواوکەری کاری ناتەواوی (ە) یە." },
+      { id: 8, question: "دیوانی «فەرهەنگی خەم» بەرهەمی کام شاعیرە؟", options: ["نالی", "سالم", "حەسیب قەرەداغی", "مەحوی"], correctAnswer: 2, explanation: "دیوانی «فەرهەنگی خەم» یەکێکە لە بەرهەمەکانی حەسیب قەرەداغی." },
+      { id: 9, question: "کام نیشانە بۆ جیاکردنەوەی بەشەکانی ئاخاوتن بەکاردێت و ڕاوەستانێکی کورتە؟", options: ["خاڵ", "بۆر (،)", "دوو خاڵ", "سەرسوڕمان"], correctAnswer: 1, explanation: "بۆر (،) نیشانەی کورترین ڕاوەستانە و بۆ جیاکردنەوەی بەشەکانە." },
+      { id: 10, question: "نیشانەی (؟) لە کوێ بەکاردێت؟", options: ["دوای ناوی بانگکراو", "کۆتایی ڕستەی پرسیاری", "پێش نموونە", "کۆتایی هەموو ڕستەیەک"], correctAnswer: 1, explanation: "نیشانەی پرسیار (؟) تەنیا لە کۆتایی ڕستەیەک دێت کە پرسیاری تێدا بێت." },
+      { id: 11, question: "نالی لە چ ساڵێک لەدایکبووە؟", options: ["١٨٠٠", "١٨١٢", "١٨٧٣", "١٩٢٩"], correctAnswer: 0, explanation: "نالی لە ساڵی ١٨٠٠ لە گوندی خاک و خۆڵ لەدایکبووە." },
+      { id: 12, question: "کام لەمانە کاری یاریدەدەرە؟", options: ["چوو", "نووست", "دەبێت", "خوارد"], correctAnswer: 2, explanation: "«دەبێت» کاری یاریدەدەرە چونکە لەگەڵ کارێکی تر دێت." },
+      { id: 13, question: "ئەگەر «کوڕان» بانگ بکرێن بە «ە»، دەبێتە چی؟", options: ["کوڕانە", "کوڕەکان", "کوڕینە", "کوڕگەل"], correctAnswer: 2, explanation: "نیشانەی کۆ (ان) دەگۆڕێت بۆ (ین) کاتێک (ە)ی دەچێتە سەر: کوڕینە." },
+      { id: 14, question: "داستانی قەڵای دمدم لە چ ساڵێک ڕوویدا؟", options: ["١٦٠٨", "١٨٠٠", "١٩٩٧", "١٧٨٠"], correctAnswer: 0, explanation: "داستانی قەڵای دمدم لە ساڵی ١٦٠٨ بە سەرکردایەتی خانی لەپ زێڕین ڕوویدا." },
+      { id: 15, question: "سالم شاعیر خەڵکی کام شار بووە؟", options: ["هەولێر", "کەرکوک", "سلێمانی", "دهۆک"], correctAnswer: 2, explanation: "سالم (عەبدولڕەحمان بەگی ساحێبقڕان) خەڵکی شاری سلێمانی بووە." },
+      { id: 16, question: "کام کارە پێویستی بە بەرکار هەیە؟", options: ["کاری تێپەڕ", "کاری تێنەپەڕ", "کاری ناتەواو", "چاوگ"], correctAnswer: 0, explanation: "کاری تێپەڕ هەمیشە پێویستی بە بەرکار هەیە بۆ تەواوکردنی واتاکەی." },
+      { id: 17, question: "«ئای! ئەوە لێرەیت!» ئەمە چی تێدایە؟", options: ["پرسیار", "سەرسوڕمان", "بانگکردن", "هیچیان"], correctAnswer: 1, explanation: "بەکارهێنانی (!) نیشانەی سەرسوڕمان و هەست دەردەخات." },
+      { id: 18, question: "ناوی تەواوی نالی چییە؟", options: ["مەلا خدر", "عەبدولڕەحمان", "مستەفا", "ئەحمەد"], correctAnswer: 0, explanation: "ناوی تەواوی نالی، مەلا خدری کوڕی ئەحمەدی شاوەیسی ئالی بەگی میکایەڵیە." },
+      { id: 19, question: "وشەی (پشتاوپشت) چ جۆرە هاوەڵکارێکە؟", options: ["سادە", "داڕژاو", "لێکدراو", "ناوی واتایی"], correctAnswer: 2, explanation: "پشتاوپشت هاوەڵکاری لێکدراوە چونکە لە دوو وشە (پشت + پشت) پێکهاتووە." },
+      { id: 20, question: "حەسیب قەرەداغی لە کوێ لەدایکبووە؟", options: ["سۆڵەی چرچەی قەڵا", "خاک و خۆڵ", "سلێمانی", "بەغدا"], correctAnswer: 0, explanation: "حەسیب قەرەداغی لە گوندی سۆڵەی چرچەی قەڵا لەدایکبووە." },
+      { id: 21, question: "«خواردم» چ جۆرە کارێکە؟", options: ["ڕابردووی تێپەڕ", "ڕابردووی تێنەپەڕ", "ڕانەبردوو", "داخوازی"], correctAnswer: 0, explanation: "خواردم کاری ڕابردووی تێپەڕە چونکە جێناوی (م)ی وەرگرتووە." },
+      { id: 22, question: "کام لەمانە ناوی واتاییە؟", options: ["بەرد", "خۆشەویستی", "دار", "پێنووس"], correctAnswer: 1, explanation: "خۆشەویستی ناوی واتاییە چونکە بەرجەستە نییە و بە دەست ناگیرێت." },
+      { id: 23, question: "«ئادەی» بۆ کێ بەکاردێت؟", options: ["تەنیا بۆ نێر", "تەنیا بۆ مێ", "بۆ هەردووکیان (گشتی)", "بۆ کۆ"], correctAnswer: 2, explanation: "ئادەی ئامرازێکی گشتییە و بۆ نێر و مێ بەکاردێت." },
+      { id: 24, question: "کام لەمانە کاری تێنەپەڕە؟", options: ["خوارد", "نووسی", "شکا", "برد"], correctAnswer: 2, explanation: "«شکا» کاری تێنەپەڕە، چونکە بکەری هەیە بەڵام بەرکاری نییە (پەنجەرەکە شکا)." },
+      { id: 25, question: "هۆنراوەکانی نالی زیاتر باسی چی دەکەن؟", options: ["دڵداری و نیشتمان", "سرووشت", "مێژوو", "سیاسەت"], correctAnswer: 0, explanation: "سێ مەبەستی سەرەکی نالی: دڵداری، ئایینی، و نیشتمانپەروەری بوون." },
+      { id: 26, question: "نیشانەی (:) بۆ چی بەکاردێت؟", options: ["کۆتایی ڕستە", "ڕاڤەکردن و نموونە", "سەرسوڕمان", "پرسیار"], correctAnswer: 1, explanation: "دوو خاڵ (:) نیشانەی ڕاڤەکردنە و پێش نموونە یان قسە دێت." },
+      { id: 27, question: "ڕێبازی کلاسیک لە سەدەی چەندەم سەریهەڵدا؟", options: ["١٥", "١٦", "١٧", "١٨"], correctAnswer: 2, explanation: "ڕێبازی کلاسیک لە ئەوروپا لە سەدەی ١٧ سەریهەڵدا." },
+      { id: 28, question: "کام شاعیر بە «شاسواری ڕەوانبێژی» ناسراوە؟", options: ["نالی", "سالم", "مەحوی", "کوردێ"], correctAnswer: 1, explanation: "سالم بە شاسواری ڕەوانبێژی کوردی دادەنرێت." },
+      { id: 29, question: "وشەی «بەپەلە» چ جۆرە هاوەڵکارێکە؟", options: ["سادە", "داڕژاو", "لێکدراو", "هیچیان"], correctAnswer: 1, explanation: "بەپەلە هاوەڵکاری داڕژاوە (بە + پەلە)." },
+      { id: 30, question: "مەحوی لە چ ساڵێک کۆچی دوایی کردووە؟", options: ["١٩٠٦", "١٨٧٣", "١٨٦٦", "١٩٩٧"], correctAnswer: 0, explanation: "مەحوی لە ساڵی ١٩٠٦ کۆچی دوایی کردووە." },
+      { id: 31, question: "بۆ گۆڕینی هێزی کار لە تێپەڕەوە بۆ تێنەپەڕ چی بەکاردێت؟", options: ["کاری یاریدەدەر", "ئامرازی بانگکردن", "هاوەڵناو", "بکەر"], correctAnswer: 0, explanation: "یەکێک لە سوودەکانی کاری یاریدەدەر گۆڕینی هێزی کارە." },
+      { id: 32, question: "«کوردایەتی» چ جۆرە ناوێکە؟", options: ["ناوی بەرجەستە", "ناوی واتایی داڕژاو", "ناوی واتایی بنجی", "ناوی تایبەت"], correctAnswer: 1, explanation: "کوردایەتی ناوی واتایی داڕژاوە (کورد + ایەتی)." },
+      { id: 33, question: "کام لەمانە کاری دانانی (Subjunctive) نییە؟", options: ["بڕۆم", "بیخۆیت", "چوو", "بنووسن"], correctAnswer: 2, explanation: "«چوو» کاری ڕابردووە، بەڵام ئەوانی تر (بـ)یان پێوەیە و دانانین." },
+      { id: 34, question: "میرخانی لەپ زێڕین سەرکردەی کام قەڵا بوو؟", options: ["قەڵای دیمدیم", "قەڵای هەولێر", "قەڵای شێروانە", "قەڵای کەرکوک"], correctAnswer: 0, explanation: "میرخانی لەپ زێڕین سەرکردەی داستانی قەڵای دیمدیم بوو." },
+      { id: 35, question: "«هۆ کاکەی شوان»... وشەی (هۆ) چییە؟", options: ["ناوی بانگکراو", "ئامرازی بانگکردن", "بکەر", "دیارخەر"], correctAnswer: 1, explanation: "(هۆ) ئامرازی بانگکردنە بۆ نێر بەکاردێت." },
+      { id: 36, question: "لە ڕێبازی کلاسیکدا گرنگی بە چی دەدرێت؟", options: ["واتا و عەرووز", "سەربەستی کێش", "وشەی بیانی", "بابەتی ڕۆمانسی تەنیا"], correctAnswer: 0, explanation: "کلاسیک گرنگی زۆر بە پتەوی واتا و کێشی عەرووزی دەدات." },
+      { id: 37, question: "کام لەمانە نیشانەی بۆر (،) تێیدا بەکارنایەت؟", options: ["نێوان دوو ڕستە", "دوای ناوی بانگکراو", "کۆتایی ڕستە", "نێوان زنجیرە وشە"], correctAnswer: 2, explanation: "بۆر (،) بۆ ڕاوەستانی کورتە، لە کۆتایی ڕستە خاڵ (.) بەکاردێت." },
+      { id: 38, question: "«شەرم» چ جۆرە ناوێکە؟", options: ["ناوی واتایی بنجی", "ناوی بەرجەستە", "ناوی واتایی داڕژاو", "ناوی تایبەت"], correctAnswer: 0, explanation: "شەرم لە بنەڕەتدا خۆی واتاییە و پاشگری نییە (بنجی)." },
+      { id: 39, question: "ئەگەر بڵێین «وانەکە خوێنرا»، ئەمە چ جۆرە ڕستەیەکە؟", options: ["بکەر نادیار", "بکەر دیار", "فەرمانی", "دانانی"], correctAnswer: 0, explanation: "«خوێنرا» بکەرەکەی نادیارە (کێ خوێندی؟ دیار نییە)." },
+      { id: 40, question: "نالی بە چی وەڵامی ئەوانەی دایەوە کە دەیانگوت کوردی هۆنراوەی پێ نانووسرێت؟", options: ["بە شەڕ", "بە دیوانەکەی", "بە بێدەنگی", "بە ڕاکردن"], correctAnswer: 1, explanation: "نالی گوتی: «نالی ئەمڕۆ حاکمی سێ موڵکە دیوانی هەیە»." },
+      { id: 41, question: "«بچۆ» چ جۆرە کارێکە؟", options: ["ڕابردوو", "ڕانەبردوو", "داخوازی", "یاریدەدەر"], correctAnswer: 2, explanation: "«بچۆ» فەرمان یان داخوازییە." },
+      { id: 42, question: "وشەی (زیرەک) لە «خوێندکاری زیرەک» چییە؟", options: ["هاوەڵناوی چۆنیەتی", "هاوەڵکاری چۆنیەتی", "ناو", "جێناو"], correctAnswer: 0, explanation: "زیرەک وەسفی خوێندکار دەکات، بۆیە هاوەڵناوی چۆنیەتییە." },
+      { id: 43, question: "کام لەمانە لە تایبەتمەندییەکانی شێوازی نالی نییە؟", options: ["بەکارهێنانی وشەی سادە", "قووڵی واتا", "بەکارهێنانی وشەی هەمەڕەنگ", "الوازی زمان"], correctAnswer: 3, explanation: "نالی بە زمانێکی زۆر بەهێز و پتەو ناسراوە, نەک لاواز." },
+      { id: 44, question: "لە ڕستەی «ئازاد بەپەلە هات»، وشەی «بەپەلە» ئەرکی چییە؟", options: ["تەواوکەری کار (هاوەڵکار)", "دیارخەری ناو", "بەرکار", "نیهاد"], correctAnswer: 0, explanation: "«بەپەلە» چۆنیەتی هاتنەکە ڕوون دەکاتەوە، بۆیە هاوەڵکاری چۆنیەتییە." },
+      { id: 45, question: "سالم لە ساڵی ١٨٥١ کۆچی کرد بۆ کوێ؟", options: ["تاران", "بەغدا", "ئیستەنبوڵ", "شام"], correctAnswer: 0, explanation: "سالم کۆچی کرد بۆ تاران بەڵام دواتر گەڕایەوە." },
+      { id: 46, question: "جووتەکەوانە « » بۆ چی بەکاردێت؟", options: ["بۆ پرسیار", "بۆ گواستنەوەی دەق وەک خۆی", "بۆ کۆتایی ڕستە", "بۆ ناوی بانگکراو"], correctAnswer: 1, explanation: "جووتەکەوانە بۆ ئەوەیە قسەیەک یان دەقێک وەک خۆی بنووسیتەوە بێ دەستکاری." },
+      { id: 47, question: "بەرهەمی «هەڵەبشیما» هی کێیە؟", options: ["حەسیب قەرەداغی", "نالی", "مەحوی", "سالم"], correctAnswer: 0, explanation: "«هەڵەبشیما» قەسیدەیەکی بەناوبانگی حەسیب قەرەداغییە." },
+      { id: 48, question: "کاری تێپەڕ چۆن دەناسرێتەوە؟", options: ["واتای بەبێ بەرکار تەواو نابێت", "واتای بەبێ بکەر تەواو نابێت", "هەمیشە (ب)ی پێوەیە", "هیچیان"], correctAnswer: 0, explanation: "کاری تێپەڕ هەمیشە پێویستی بە بەرکارە." },
+      { id: 49, question: "لە دێڕی «خەڵکە من بۆ خوا، وا پێتان ئەڵێم»، بانگکراو کامەیە؟", options: ["خەڵک", "من", "خوا", "وا"], correctAnswer: 0, explanation: "«خەڵکە» بانگکراوەکەیە (خەڵک + ە)." },
+      { id: 50, question: "کام لەمانە بنەمای ڕێبازی کلاسیک نییە؟", options: ["عەقڵ و ژیری", "لاساییکردنەوەی پێشینان", "سەربەستی ڕەها لە کێش", "پتەوی واتا"], correctAnswer: 2, explanation: "ڕێبازی کلاسیک پابەندە بە کێش و سەرواوە، سەربەستی ڕەهای نییە." }
+    ];
+
+    // --- COMPONENTS ---
+
+    const LessonCard = ({ lesson }) => {
+      const [isOpen, setIsOpen] = useState(false);
+
+      return (
+        <div className="glass-card rounded-3xl shadow-soft mb-5 overflow-hidden transition-all duration-300">
+          <button 
+            onClick={() => setIsOpen(!isOpen)}
+            className={`w-full flex items-center justify-between p-5 transition-colors duration-300 ${isOpen ? 'bg-slate-50/50' : 'bg-transparent'}`}
+          >
+            <div className="flex items-center gap-4">
+              <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${lesson.color} flex items-center justify-center shadow-lg text-white shrink-0`}>
+                {Icons[lesson.iconName]}
+              </div>
+              <div className="text-right">
+                <h3 className="text-lg font-black text-slate-800 leading-tight mb-1">{lesson.title}</h3>
+                <p className="text-xs text-slate-500 font-bold opacity-70">{lesson.subtitle}</p>
+              </div>
+            </div>
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${isOpen ? 'bg-indigo-100 rotate-180' : 'bg-transparent'}`}>
+              <div className={isOpen ? 'text-indigo-600' : 'text-slate-400'}>{Icons.ChevronDown}</div>
+            </div>
+          </button>
+          
+          <div className={`transition-all duration-500 ease-in-out overflow-hidden ${isOpen ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
+            <div className="p-6 pt-2 border-t border-slate-100 bg-white/50">
+              <div className="animate-slide-up">
+                {lesson.content}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    const QuizComponent = () => {
+      const [activeQuestions, setActiveQuestions] = useState([]);
+      const [currentQuestion, setCurrentQuestion] = useState(0);
+      const [selectedOption, setSelectedOption] = useState(null);
+      const [showExplanation, setShowExplanation] = useState(false);
+      const [score, setScore] = useState(0);
+      const [quizFinished, setQuizFinished] = useState(false);
+      const [animating, setAnimating] = useState(false);
+
+      useEffect(() => {
+        startNewQuiz();
+      }, []);
+
+      const startNewQuiz = () => {
+        const shuffled = [...allQuestions].sort(() => 0.5 - Math.random());
+        setActiveQuestions(shuffled.slice(0, 10));
+        setCurrentQuestion(0);
+        setSelectedOption(null);
+        setShowExplanation(false);
+        setScore(0);
+        setQuizFinished(false);
+      };
+
+      const handleOptionClick = (index) => {
+        if (selectedOption !== null) return; 
+        setSelectedOption(index);
+        setShowExplanation(true);
+        if (index === activeQuestions[currentQuestion].correctAnswer) {
+          setScore(score + 1);
+        }
+      };
+
+      const nextQuestion = () => {
+        setAnimating(true);
+        setTimeout(() => {
+          setSelectedOption(null);
+          setShowExplanation(false);
+          if (currentQuestion < activeQuestions.length - 1) {
+            setCurrentQuestion(currentQuestion + 1);
+          } else {
+            setQuizFinished(true);
+          }
+          setAnimating(false);
+        }, 300);
+      };
+
+      const percentage = (score / 10) * 100;
+      let feedback = {
+        title: "نایابە!",
+        message: "تۆ زۆر زیرەکیت، هەموو پرسیارەکانت بە ڕاستی وەڵام دایەوە.",
+        icon: 'Trophy',
+        gradient: "from-yellow-400 to-orange-500"
+      };
+
+      if (percentage < 50) {
+        feedback = {
+          title: "هەوڵی باشتر بدە",
+          message: "کێشە نییە، پێداچوونەوە بە وانەکان بکە و دووبارە هەوڵ بدەرەوە.",
+          icon: 'BookOpen',
+          gradient: "from-blue-400 to-indigo-500"
+        };
+      } else if (percentage < 80) {
+        feedback = {
+          title: "زۆر باشە!",
+          message: "ئاستێکی باشە، بەڵام دەتوانیت باشتریش بیت.",
+          icon: 'Star',
+          gradient: "from-indigo-400 to-purple-500"
+        };
+      }
+
+      if (activeQuestions.length === 0) return <div className="text-center p-10">Loading...</div>;
+
+      if (quizFinished) {
+        return (
+          <div className="flex flex-col items-center justify-center p-6 animate-scale-in max-w-lg mx-auto">
+            <div className="w-full glass-card rounded-3xl shadow-xl overflow-hidden">
+                <div className={`h-40 bg-gradient-to-r ${feedback.gradient} flex items-center justify-center relative overflow-hidden`}>
+                    <div className="absolute inset-0 bg-white opacity-10"></div>
+                    <div className="relative z-10 animate-bounce-slow text-white">
+                        {Icons[feedback.icon]}
+                    </div>
+                </div>
+                <div className="p-8 text-center">
+                    <h2 className="text-3xl font-black text-slate-800 mb-2">{feedback.title}</h2>
+                    <p className="text-lg text-slate-500 mb-8">{feedback.message}</p>
+                    <div className="flex items-center justify-center gap-2 mb-8">
+                        <span className="text-6xl font-black text-slate-800">{score}</span>
+                        <span className="text-xl text-slate-400 font-bold mt-4">/ 10</span>
+                    </div>
+                    <button onClick={startNewQuiz} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold shadow-glow hover:scale-[1.02] transition-all flex items-center justify-center gap-2">
+                      {Icons.RefreshCw}
+                      تاقیکردنەوەیەکی نوێ
+                    </button>
+                </div>
+            </div>
+          </div>
+        );
+      }
+
+      const question = activeQuestions[currentQuestion];
+
+      return (
+        <div className={`max-w-2xl mx-auto transition-opacity duration-300 ${animating ? 'opacity-0' : 'opacity-100'}`}>
+          <div className="flex justify-between items-center mb-6 px-4">
+            <div className="glass-card px-4 py-2 rounded-xl shadow-sm">
+                <span className="text-sm font-black text-indigo-600">
+                {currentQuestion + 1} <span className="text-slate-300 mx-1">/</span> 10
+                </span>
+            </div>
+            <div className="glass-card px-4 py-2 rounded-xl shadow-sm">
+                 <span className="text-sm font-bold text-slate-600">نمرە: <span className="text-emerald-500">{score}</span></span>
+            </div>
+          </div>
+
+          <div className="glass-card rounded-3xl shadow-soft overflow-hidden relative">
+            <div className="h-1.5 bg-slate-100 w-full">
+                <div className="h-full bg-indigo-500 transition-all duration-500 rounded-r-full" style={{ width: `${((currentQuestion + 1) / 10) * 100}%` }}></div>
+            </div>
+            
+            <div className="p-8 border-b border-slate-100">
+              <h3 className="text-xl font-bold text-slate-800 leading-normal">{question.question}</h3>
+            </div>
+
+            <div className="p-6 space-y-3 bg-white/30">
+              {question.options.map((option, index) => {
+                let buttonStyle = "bg-white/80 border-white hover:border-indigo-200 text-slate-700 shadow-sm";
+                let icon = <div className="w-5 h-5 rounded-full border-2 border-slate-200"></div>;
+
+                if (selectedOption !== null) {
+                  if (index === question.correctAnswer) {
+                    buttonStyle = "bg-emerald-50 border-emerald-500 ring-1 ring-emerald-500 text-emerald-800";
+                    icon = <div className="text-emerald-600">{Icons.CheckCircle2}</div>;
+                  } else if (index === selectedOption) {
+                    buttonStyle = "bg-rose-50 border-rose-300 text-rose-800";
+                    icon = <div className="text-rose-500">{Icons.XCircle}</div>;
+                  } else {
+                     buttonStyle = "opacity-40 border-transparent bg-slate-50";
+                  }
+                }
+
+                return (
+                  <button
+                    key={index}
+                    onClick={() => handleOptionClick(index)}
+                    disabled={selectedOption !== null}
+                    className={`w-full text-right p-5 rounded-2xl border-2 flex items-center justify-between transition-all duration-200 font-bold text-lg ${buttonStyle}`}
+                  >
+                    <span>{option}</span>
+                    <span className="shrink-0 ml-3">{icon}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {showExplanation && (
+              <div className="bg-indigo-600 p-6 text-white animate-slide-up">
+                <div className="flex items-start gap-3 mb-6">
+                  <div className="bg-white/20 p-2 rounded-lg shrink-0 mt-1">
+                      {Icons.HelpCircle}
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-lg mb-1 text-indigo-100">ڕوونکردنەوە:</h4>
+                    <p className="text-white leading-relaxed opacity-90 text-sm">{question.explanation}</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={nextQuestion}
+                  className="w-full py-4 bg-white text-indigo-700 rounded-xl font-black shadow-lg hover:bg-indigo-50 active:scale-95 transition-all flex items-center justify-center gap-2"
+                >
+                  <span>{currentQuestion === 9 ? "بینینی ئەنجام" : "پرسیاری داهاتوو"}</span>
+                  {Icons.ArrowLeft}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    };
+
+    // --- MAIN APP ---
+
+    const App = () => {
+      const [activeTab, setActiveTab] = useState('home');
+      const [isScrolled, setIsScrolled] = useState(false);
+
+      useEffect(() => {
+        const handleScroll = () => setIsScrolled(window.scrollY > 10);
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+      }, []);
+
+      return (
+        <div className="min-h-screen flex flex-col font-sans pb-28 sm:pb-0 relative overflow-hidden">
+          
+          {/* Background Blobs */}
+          <div className="fixed inset-0 pointer-events-none z-[-1]">
+             <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float"></div>
+             <div className="absolute top-[20%] left-[-10%] w-[400px] h-[400px] bg-indigo-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float" style={{animationDelay: '2s'}}></div>
+             <div className="absolute bottom-[-10%] right-[20%] w-[600px] h-[600px] bg-pink-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float" style={{animationDelay: '4s'}}></div>
+          </div>
+
+          {/* Header */}
+          <header className={`sticky top-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/80 backdrop-blur-xl shadow-sm border-b border-slate-100 py-3' : 'bg-transparent py-5'}`}>
+            <div className="max-w-4xl mx-auto px-6 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                 <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-violet-600 rounded-xl flex items-center justify-center text-white shadow-glow">
+                    {Icons.BookOpen}
+                 </div>
+                 <div>
+                    <h1 className="text-xl font-black text-slate-800 tracking-tight leading-none">زمـان و ئەدەب</h1>
+                    <p className="text-[10px] text-indigo-600 font-bold mt-1 tracking-wider">پەیمانگای ڕانیە</p>
+                 </div>
+              </div>
+            </div>
+          </header>
+
+          <main className="flex-1 max-w-4xl mx-auto w-full p-6 animate-fade-in">
+            {activeTab === 'home' && (
+              <div className="flex flex-col items-center justify-center text-center space-y-10 py-8 sm:py-16">
+                
+                <div className="relative group cursor-pointer" onClick={() => setActiveTab('lessons')}>
+                  <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-500 blur-3xl opacity-40 rounded-full group-hover:opacity-60 transition-opacity duration-500"></div>
+                  <div className="relative w-72 h-72 rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-white bg-indigo-600 flex flex-col items-center justify-center text-center p-4 transform transition-transform group-hover:scale-105 duration-500">
+                    <span className="text-white font-kurdish text-3xl font-black mb-3 leading-tight drop-shadow-md">مامۆستا گوڵاڵە</span>
+                    <span className="text-indigo-100 text-sm font-bold leading-relaxed px-2 bg-indigo-700/30 py-2 rounded-xl backdrop-blur-sm">پەیمانگای کۆمپیوتەری ڕانیەی ناحکومی</span>
+                  </div>
+                </div>
+                
+                <div className="space-y-6 max-w-lg mx-auto">
+                  <h2 className="text-4xl sm:text-5xl font-black text-slate-800 leading-tight tracking-tight">
+                    ڕێزمانی کوردی<br/>
+                    <span className="gradient-text">بە شێوازێکی مۆدێرن</span>
+                  </h2>
+                  <p className="text-slate-500 text-lg leading-relaxed font-medium">
+                    باشترین سەرچاوە بۆ فێربوونی خاڵبەندی، ڕێزمان و مێژووی ئەدەبی کوردی بە شێوازێکی ئاسان.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full sm:w-auto px-4 sm:px-0">
+                  <button onClick={() => setActiveTab('lessons')} className="group relative px-8 py-5 bg-slate-900 text-white rounded-2xl font-bold shadow-xl shadow-slate-200 hover:shadow-2xl hover:-translate-y-1 transition-all overflow-hidden flex items-center justify-center gap-3">
+                    {Icons.GraduationCap}
+                    <span className="text-lg">دەستپێکردنی وانە</span>
+                  </button>
+                  <button onClick={() => setActiveTab('quiz')} className="px-8 py-5 bg-white text-slate-800 border border-slate-200 rounded-2xl font-bold shadow-sm hover:bg-slate-50 flex items-center justify-center gap-3">
+                    <div className="text-indigo-600">{Icons.HelpCircle}</div>
+                    <span className="text-lg">تاقیکردنەوە</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'lessons' && (
+              <div className="space-y-8 pb-10">
+                <div className="text-center mb-8 animate-slide-up">
+                  <h2 className="text-3xl font-black text-slate-800 mb-2">بابەتەکان هەڵبژێرە</h2>
+                </div>
+                <div className="grid gap-6">
+                    {lessons.map(lesson => (
+                    <LessonCard key={lesson.id} lesson={lesson} />
+                    ))}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'quiz' && (
+              <div className="pb-10">
+                <div className="text-center mb-10 animate-slide-up">
+                  <h2 className="text-3xl font-black text-slate-800 mb-2">تاقیکردنەوە</h2>
+                  <p className="text-slate-500">١٠ پرسیاری هەڵبژێردراو لە کۆی ٥٠ پرسیار</p>
+                </div>
+                <QuizComponent />
+              </div>
+            )}
+          </main>
+
+          <footer className="text-center py-8 px-4 border-t border-slate-100 bg-white/50 backdrop-blur mt-auto hidden sm:block">
+            <div className="flex items-center justify-center gap-2 mb-2">
+                <div className="text-indigo-500">{Icons.Sparkles}</div>
+                <p className="text-indigo-900 font-black text-lg">دیاری یاوەر و بڕوا بۆ قوتابیان</p>
+                <div className="text-indigo-500">{Icons.Sparkles}</div>
+            </div>
+            <p className="text-xs text-slate-400 font-medium">پەیمانگای کۆمپیوتەری ڕانیەی ناحکومی © {new Date().getFullYear()}</p>
+          </footer>
+          
+          <div className="sm:hidden text-center py-4 text-xs text-slate-400 bg-slate-50 border-t border-slate-100 mb-20">
+             <p className="font-bold text-indigo-900/80">دیاری یاوەر و بڕوا بۆ قوتابیان</p>
+          </div>
+
+          <nav className="fixed bottom-4 left-4 right-4 bg-slate-900/90 backdrop-blur-md rounded-2xl p-2 z-50 sm:hidden shadow-2xl border border-white/10 flex justify-between items-center text-white">
+              <button onClick={() => setActiveTab('home')} className={`flex-1 flex flex-col items-center justify-center py-2 rounded-xl transition-all ${activeTab === 'home' ? 'bg-indigo-600 shadow-glow' : 'opacity-70'}`}>
+                <div className="mb-1">{Icons.Home}</div>
+                <span className="text-[10px] font-medium">سەرەتا</span>
+              </button>
+              <button onClick={() => setActiveTab('lessons')} className={`flex-1 flex flex-col items-center justify-center py-2 rounded-xl transition-all ${activeTab === 'lessons' ? 'bg-indigo-600 shadow-glow' : 'opacity-70'}`}>
+                <div className="mb-1">{Icons.BookOpen}</div>
+                <span className="text-[10px] font-medium">وانەکان</span>
+              </button>
+              <button onClick={() => setActiveTab('quiz')} className={`flex-1 flex flex-col items-center justify-center py-2 rounded-xl transition-all ${activeTab === 'quiz' ? 'bg-indigo-600 shadow-glow' : 'opacity-70'}`}>
+                <div className="mb-1">{Icons.HelpCircle}</div>
+                <span className="text-[10px] font-medium">پرسیار</span>
+              </button>
+          </nav>
+        </div>
+      );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
